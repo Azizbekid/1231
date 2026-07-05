@@ -1,0 +1,40 @@
+name: Run Telegram Bot
+
+on:
+  # Har safar avvalgi ish 6 soatga yetganda GitHub uni to'xtatadi.
+  # Shu cron orqali har 5 soatda yangi ish avtomatik boshlanadi,
+  # shunday qilib bot deyarli uzluksiz ishlaydi.
+  schedule:
+    - cron: '0 */5 * * *'
+  # Istalgan vaqtda qo'lda ham ishga tushirish mumkin (Actions bo'limidan "Run workflow")
+  workflow_dispatch:
+
+# Eski ish hali tugamagan bo'lsa ham, yangisini navbatga qo'yish (to'xtatmasdan)
+concurrency:
+  group: telegram-bot
+  cancel-in-progress: false
+
+# Bot database.db faylini repo'ga qaytarib yozishi (push qilishi) uchun ruxsat
+permissions:
+  contents: write
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350   # ~5.8 soat (GitHub limiti 6 soat)
+    steps:
+      - name: Kodni yuklab olish
+        uses: actions/checkout@v4
+
+      - name: Python o'rnatish
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Kutubxonalarni o'rnatish
+        run: pip install -r requirements.txt
+
+      - name: Botni ishga tushirish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python main.py
